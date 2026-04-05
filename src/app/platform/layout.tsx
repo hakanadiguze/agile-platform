@@ -1,6 +1,8 @@
 // src/app/platform/layout.tsx
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -65,7 +67,7 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
           </button>
         </div>
 
-        {/* Context strip (Team/ART picker) */}
+        {/* Context strip */}
         {sidebarOpen && (
           <div className="px-4 py-3 border-b border-ink-700">
             <Link
@@ -180,7 +182,6 @@ function NavItem({ tool, open, active }: {
   )
 }
 
-// ─── Auth Screen ─────────────────────────────────────────────────────────────
 import AuthForm from '@/components/platform/AuthForm'
 
 function AuthScreen() {

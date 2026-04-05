@@ -1,6 +1,8 @@
 // src/app/platform/page.tsx
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { TOOLS } from '@/lib/tools'
 import Link from 'next/link'
 
@@ -13,7 +15,6 @@ const CATEGORIES = [
 export default function PlatformDashboard() {
   return (
     <div className="p-8">
-      {/* Header */}
       <div className="mb-10">
         <h1 className="text-2xl font-semibold text-ink-900 mb-1">
           Good to have you here 👋
@@ -23,7 +24,6 @@ export default function PlatformDashboard() {
         </p>
       </div>
 
-      {/* Context setup banner */}
       <div className="mb-10 p-5 rounded-2xl bg-brand-50 border border-brand-200 flex
                       items-center justify-between gap-4">
         <div>
@@ -43,7 +43,6 @@ export default function PlatformDashboard() {
         </Link>
       </div>
 
-      {/* Tool categories */}
       {CATEGORIES.map(cat => {
         const catTools = TOOLS.filter(t => t.category === cat.key)
         return (
@@ -61,9 +60,7 @@ export default function PlatformDashboard() {
                              hover:border-brand-300 hover:shadow-sm transition-all"
                 >
                   <div className="text-2xl mb-3">{tool.icon}</div>
-                  <div className="font-medium text-ink-900 text-sm mb-1">
-                    {tool.name}
-                  </div>
+                  <div className="font-medium text-ink-900 text-sm mb-1">{tool.name}</div>
                   <div className="text-ink-400 text-xs leading-relaxed line-clamp-2">
                     {tool.description}
                   </div>
