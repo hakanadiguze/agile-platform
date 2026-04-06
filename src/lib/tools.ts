@@ -35,7 +35,7 @@ export const TOOLS: AgileToolDef[] = [
     color:         'bg-red-50',
     accent:        'text-red-700',
     githubRepo:    'health',
-    liveUrl:       'https://hakanadiguzel.github.io/health',
+    liveUrl:       '/tools/health/',
     category:      'team',
     contextParams: ['teamId'],
   },
