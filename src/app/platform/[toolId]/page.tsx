@@ -16,7 +16,12 @@ export default function ToolPage() {
   // Rebuild URL whenever context changes (team, sprint, PI, ART, year)
   useEffect(() => {
     if (tool?.liveUrl) {
-      setUrl(ctx.buildToolURL(tool.liveUrl, tool.contextParams))
+      // Local tools (starting with /) don't need context injected via URL
+      if (tool.liveUrl.startsWith('/')) {
+        setUrl(tool.liveUrl)
+      } else {
+        setUrl(ctx.buildToolURL(tool.liveUrl, tool.contextParams))
+      }
     }
   }, [tool, ctx.teamId, ctx.artId, ctx.sprintId, ctx.piId, ctx.year])
 
