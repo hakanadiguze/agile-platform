@@ -9,11 +9,24 @@ import { usePathname } from 'next/navigation'
 import { auth } from '@/lib/firebase'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
 import { TOOLS } from '@/lib/tools'
+import { PlatformProvider, usePlatform } from '@/lib/platform-context'
 import clsx from 'clsx'
 
+// ─── Root layout — wraps everything in the platform provider ──────────────────
+
 export default function PlatformLayout({ children }: { children: React.ReactNode }) {
-  const [user, setUser]       = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  return (
+    <PlatformProvider>
+      <PlatformShell>{children}</PlatformShell>
+    </PlatformProvider>
+  )
+}
+
+// ─── Shell (needs PlatformProvider above) ────────────────────────────────────
+
+function PlatformShell({ children }: { children: React.ReactNode }) {
+  const [user, setUser]         = useState<User | null>(null)
+  const [loading, setLoading]   = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const pathname = usePathname()
 
@@ -33,9 +46,7 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
     )
   }
 
-  if (!user) {
-    return <AuthScreen />
-  }
+  if (!user) return <AuthScreen />
 
   const toolsByCategory = {
     team:    TOOLS.filter(t => t.category === 'team'),
@@ -46,72 +57,62 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
   return (
     <div className="flex min-h-screen bg-ink-50">
 
-      {/* ── SIDEBAR ─────────────────────────────────────────────────── */}
+      {/* ── SIDEBAR ──────────────────────────────────────────────────────── */}
       <aside className={clsx(
-        'fixed left-0 top-0 bottom-0 z-40 flex flex-col bg-ink-900 text-white transition-all',
-        sidebarOpen ? 'w-60' : 'w-16'
+        'fixed left-0 top-0 bottom-0 z-40 flex flex-col bg-ink-900 text-white transition-all duration-200',
+        sidebarOpen ? 'w-64' : 'w-16'
       )}>
+
         {/* Logo */}
-        <div className="flex items-center justify-between px-4 py-5 border-b border-ink-700">
+        <div className="flex items-center justify-between px-4 py-4 border-b border-ink-700 shrink-0">
           {sidebarOpen && (
-            <Link href="/" className="font-display text-lg font-bold text-white">
+            <Link href="/" className="font-display text-lg font-bold text-white leading-none">
               Hakan<span className="text-brand-400">.</span>
-              <span className="text-xs text-ink-400 font-body font-normal ml-1">platform</span>
+              <span className="text-[11px] text-ink-400 font-body font-normal ml-1 align-middle">
+                platform
+              </span>
             </Link>
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-1.5 rounded-lg hover:bg-ink-700 transition-colors text-ink-400"
+            className="p-1.5 rounded-lg hover:bg-ink-700 transition-colors text-ink-400 shrink-0"
+            title={sidebarOpen ? 'Collapse' : 'Expand'}
           >
             {sidebarOpen ? '←' : '→'}
           </button>
         </div>
 
         {/* Context strip */}
-        {sidebarOpen && (
-          <div className="px-4 py-3 border-b border-ink-700">
-            <Link
-              href="/platform/settings"
-              className="flex items-center gap-2 p-2 rounded-lg bg-ink-800
-                         hover:bg-ink-700 transition-colors"
-            >
-              <div className="w-6 h-6 rounded bg-brand-500 flex items-center
-                              justify-center text-xs font-bold shrink-0">
-                T
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs text-ink-400">Active team</div>
-                <div className="text-xs text-white truncate">Set up team →</div>
-              </div>
-            </Link>
-          </div>
-        )}
+        <ContextStrip open={sidebarOpen} />
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
-          <NavGroup label="Team" open={sidebarOpen}>
+        <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
+          <NavGroup label="Team Tools" open={sidebarOpen}>
             {toolsByCategory.team.map(t => (
-              <NavItem key={t.id} tool={t} open={sidebarOpen} active={pathname === `/platform/${t.id}`} />
+              <NavItem key={t.id} tool={t} open={sidebarOpen}
+                       active={pathname === `/platform/${t.id}`} />
             ))}
           </NavGroup>
           <NavGroup label="PI / ART" open={sidebarOpen}>
             {toolsByCategory.pi.map(t => (
-              <NavItem key={t.id} tool={t} open={sidebarOpen} active={pathname === `/platform/${t.id}`} />
+              <NavItem key={t.id} tool={t} open={sidebarOpen}
+                       active={pathname === `/platform/${t.id}`} />
             ))}
           </NavGroup>
           <NavGroup label="Learn" open={sidebarOpen}>
             {toolsByCategory.inspect.map(t => (
-              <NavItem key={t.id} tool={t} open={sidebarOpen} active={pathname === `/platform/${t.id}`} />
+              <NavItem key={t.id} tool={t} open={sidebarOpen}
+                       active={pathname === `/platform/${t.id}`} />
             ))}
           </NavGroup>
         </nav>
 
         {/* User */}
-        <div className="border-t border-ink-700 p-3">
+        <div className="border-t border-ink-700 p-3 shrink-0">
           <div className={clsx('flex items-center gap-3', !sidebarOpen && 'justify-center')}>
             <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center
                             justify-center text-xs font-bold shrink-0">
-              {user.displayName?.[0] ?? user.email?.[0] ?? '?'}
+              {user.displayName?.[0]?.toUpperCase() ?? user.email?.[0]?.toUpperCase() ?? '?'}
             </div>
             {sidebarOpen && (
               <div className="flex-1 min-w-0">
@@ -130,10 +131,10 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
         </div>
       </aside>
 
-      {/* ── MAIN ────────────────────────────────────────────────────── */}
+      {/* ── MAIN ──────────────────────────────────────────────────────────── */}
       <main className={clsx(
-        'flex-1 transition-all min-h-screen',
-        sidebarOpen ? 'ml-60' : 'ml-16'
+        'flex-1 transition-all duration-200 min-h-screen',
+        sidebarOpen ? 'ml-64' : 'ml-16'
       )}>
         {children}
       </main>
@@ -141,16 +142,77 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
   )
 }
 
+// ─── Context strip (shows active Team / ART / Sprint / PI) ───────────────────
+
+function ContextStrip({ open }: { open: boolean }) {
+  const ctx = usePlatform()
+
+  if (!open) {
+    // Collapsed: just show a small dot indicator if any context set
+    const hasCtx = !!(ctx.teamId || ctx.artId)
+    return (
+      <div className="border-b border-ink-700 flex justify-center py-3">
+        <Link href="/platform/settings"
+              className="w-8 h-8 rounded-lg bg-ink-800 hover:bg-ink-700 transition-colors
+                         flex items-center justify-center text-sm"
+              title="Settings">
+          ⚙️
+        </Link>
+      </div>
+    )
+  }
+
+  return (
+    <Link
+      href="/platform/settings"
+      className="border-b border-ink-700 px-4 py-3 block
+                 hover:bg-ink-800 transition-colors group"
+    >
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] uppercase tracking-widest text-ink-500 font-semibold">
+          Active Context
+        </span>
+        <span className="text-[10px] text-ink-500 group-hover:text-brand-400 transition-colors">
+          Edit ›
+        </span>
+      </div>
+
+      <div className="space-y-1.5">
+        <CtxRow icon="👥" label="Team"   value={ctx.teamName}   />
+        <CtxRow icon="🚂" label="ART"    value={ctx.artName}    />
+        <CtxRow icon="🎯" label="PI"     value={ctx.piName}     />
+        <CtxRow icon="🏃" label="Sprint" value={ctx.sprintName} />
+        <CtxRow icon="📅" label="Year"   value={ctx.year}       />
+      </div>
+    </Link>
+  )
+}
+
+function CtxRow({ icon, label, value }: { icon: string; label: string; value: string | null }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[11px] shrink-0">{icon}</span>
+      <span className="text-[10px] text-ink-500 w-10 shrink-0">{label}</span>
+      <span className={clsx(
+        'text-[11px] truncate',
+        value ? 'text-white font-medium' : 'text-ink-600 italic'
+      )}>
+        {value ?? 'Not set'}
+      </span>
+    </div>
+  )
+}
+
+// ─── Nav helpers ──────────────────────────────────────────────────────────────
+
 function NavGroup({ label, open, children }: {
-  label: string
-  open: boolean
-  children: React.ReactNode
+  label: string; open: boolean; children: React.ReactNode
 }) {
   return (
     <div>
       {open && (
         <div className="text-[10px] font-semibold uppercase tracking-wider
-                        text-ink-500 px-2 mb-2">
+                        text-ink-500 px-2 mb-1.5">
           {label}
         </div>
       )}
@@ -160,9 +222,7 @@ function NavGroup({ label, open, children }: {
 }
 
 function NavItem({ tool, open, active }: {
-  tool: (typeof TOOLS)[0]
-  open: boolean
-  active: boolean
+  tool: (typeof TOOLS)[0]; open: boolean; active: boolean
 }) {
   return (
     <Link
@@ -182,6 +242,8 @@ function NavItem({ tool, open, active }: {
   )
 }
 
+// ─── Auth screen ──────────────────────────────────────────────────────────────
+
 import AuthForm from '@/components/platform/AuthForm'
 
 function AuthScreen() {
@@ -193,7 +255,9 @@ function AuthScreen() {
             Hakan<span className="text-brand-500">.</span>
             <span className="text-sm text-ink-400 font-body font-normal ml-1">platform</span>
           </Link>
-          <p className="text-ink-500 text-sm mt-2">Sign in to access your Agile tools</p>
+          <p className="text-ink-500 text-sm mt-2">
+            Sign in to access your Agile tools
+          </p>
         </div>
         <AuthForm />
       </div>
